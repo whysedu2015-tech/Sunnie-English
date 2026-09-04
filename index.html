@@ -392,7 +392,7 @@ async function submit(){
     state.attempt++;
     state.doneDays=[...new Set([...state.doneDays,state.day])].sort((a,b)=>a-b);
     showFeedback(p, my);
-  }catch(e){ alert("올리는 데 실패했어요. 잠시 후 '인증하기'를 다시 눌러 주세요."); console.error(e); }
+  }catch(e){ alert("올리는 데 실패했어요.\n\n[오류 내용]\n"+String(e.message||e).slice(0,300)); console.error(e); }
   btn.disabled=false; btn.textContent="인증하기";
 }
 function showFeedback(p, my){
