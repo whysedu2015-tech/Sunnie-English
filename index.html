@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SUDA 10분 · 오늘의 인증</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --paper:#F6F8F4; --ink:#17302C; --ink-2:#5A6B67; --line:#D9E1DC;
+  --green:#1F7A63; --green-soft:#DDEFE7; --sun:#F2C14E; --sun-soft:#FBEFC9;
+  --rose:#E36F6A; --white:#fff;
+  --radius:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:var(--paper);color:var(--ink);line-height:1.5;font-size:16px;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,textarea{font:inherit;color:inherit}
+.app{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column;padding:20px 20px 40px}
+.screen.on{display:flex}
+
+/* ── 상단 진행 표시 ── */
+.top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.day{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.day small{font-size:15px;font-weight:600;color:var(--ink-2);margin-left:4px}
+.streak{font-size:14px;color:var(--ink-2)}
+.streak b{color:var(--green);font-weight:700}
+.dots{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin:12px 0 22px}
+.dot{aspect-ratio:1;border-radius:6px;background:var(--line)}
+.dot.done{background:var(--green)}
+.dot.today{background:var(--sun);box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--sun)}
+
+/* ── 문장 카드 ── */
+.card{background:var(--white);border-radius:var(--radius);padding:18px;box-shadow:0 1px 0 var(--line)}
+.card + .card{margin-top:12px}
+.eyebrow{font-size:13px;color:var(--ink-2);margin-bottom:6px}
+.title{font-size:20px;font-weight:800;letter-spacing:-.01em;margin-bottom:14px}
+.words{display:flex;flex-wrap:wrap;gap:6px 8px;margin-top:4px}
+.word{background:var(--green-soft);color:var(--green);border-radius:999px;padding:4px 11px;font-size:14px;font-weight:600}
+.word span{font-weight:500;opacity:.75;margin-left:5px}
+.line{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:10px 0;border-top:1px dashed var(--line)}
+.line:first-of-type{border-top:0}
+.role{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--ink);color:#fff;margin-top:2px}
+.role.b{background:var(--sun);color:var(--ink)}
+.en{font-size:17px;font-weight:600;line-height:1.4}
+.ko{font-size:14px;color:var(--ink-2);margin-top:2px}
+.play{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:9px 14px;border-radius:999px;background:var(--paper);color:var(--ink-2);font-size:14px;font-weight:600}
+.play::before{content:"";width:0;height:0;border-left:9px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent}
+
+/* ── 미션 체크 ── */
+.mission{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.mission label{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:var(--paper)}
+.mission input{width:22px;height:22px;accent-color:var(--green)}
+.mission b{font-weight:600;white-space:nowrap}
+.mission em{font-style:normal;color:var(--ink-2);font-size:13px;margin-left:auto;white-space:nowrap}
+
+/* ── 버튼 ── */
+.cta{margin-top:auto;padding-top:22px}
+.btn{width:100%;padding:16px;border-radius:14px;font-size:17px;font-weight:700;background:var(--green);color:#fff;transition:transform .1s}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:var(--white);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+.btn:disabled{opacity:.4}
+.hint{font-size:13px;color:var(--ink-2);text-align:center;margin-top:10px}
+
+/* ── 녹음 ── */
+.rec-block{margin-top:12px}
+.rec-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.rec-head h3{font-size:16px;font-weight:700}
+.rec-head span{font-size:13px;color:var(--ink-2)}
+.script-mini{background:var(--paper);border-radius:12px;padding:12px 14px;font-size:15px;line-height:1.6}
+.script-mini p{padding:2px 0}
+.script-mini p b{display:inline-block;width:18px;color:var(--ink-2);font-weight:600}
+.recorder{display:flex;align-items:center;gap:14px;margin-top:12px}
+.mic{width:64px;height:64px;border-radius:50%;background:var(--rose);color:#fff;display:grid;place-items:center;flex:none;box-shadow:0 6px 18px rgba(227,111,106,.35);transition:transform .15s}
+.mic.rec{animation:pulse 1.2s ease-in-out infinite}
+.mic svg{width:26px;height:26px}
+.mic.done{background:var(--green);box-shadow:0 6px 18px rgba(31,122,99,.3)}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@media (prefers-reduced-motion:reduce){.mic.rec{animation:none}}
+.rec-state{flex:1}
+.rec-state .t{font-size:16px;font-weight:700}
+.rec-state .s{font-size:13px;color:var(--ink-2)}
+.rec-state audio{width:100%;height:32px;margin-top:6px}
+.my{margin-top:14px}
+.my textarea{width:100%;min-height:58px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;resize:none;font-size:16px}
+.my textarea:focus{outline:none;border-color:var(--green)}
+.my .pattern{font-size:13px;color:var(--ink-2);margin-bottom:6px}
+.my .pattern b{color:var(--green);font-weight:700}
+
+/* ── 피드백 ── */
+.stamp{display:flex;align-items:center;gap:14px;padding:18px;border-radius:var(--radius);background:var(--ink);color:#fff}
+.stamp .check{width:44px;height:44px;border-radius:50%;background:var(--sun);display:grid;place-items:center;flex:none}
+.stamp .check svg{width:24px;height:24px}
+.stamp h2{font-size:20px;font-weight:800;line-height:1.2}
+.stamp p{font-size:13px;opacity:.8;margin-top:2px}
+.fb{margin-top:12px}
+.fb .card{border-left:5px solid var(--green)}
+.fb .card.sun{border-left-color:var(--sun)}
+.fb .card.rose{border-left-color:var(--rose)}
+.fb h4{font-size:14px;color:var(--ink-2);font-weight:600;margin-bottom:6px}
+.fb p{font-size:16px;line-height:1.55}
+.fb s{color:var(--rose);text-decoration-thickness:2px}
+.fb ins{text-decoration:none;color:var(--green);font-weight:700}
+.fb .heard{background:var(--sun-soft);padding:0 4px;border-radius:4px}
+
+/* ── 이름 선택 ── */
+.hello{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin:28px 0 6px}
+.sub{color:var(--ink-2);margin-bottom:24px}
+.names{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.names button{padding:18px 12px;border-radius:14px;background:#fff;box-shadow:0 1px 0 var(--line);font-size:17px;font-weight:600}
+.names button:active{background:var(--green-soft)}
+
+/* ── 테스트 바 ── */
+.testbar{position:sticky;top:0;z-index:5;background:#FFF4D6;border-bottom:1px solid #F2D58A;font-size:12px;padding:6px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.testbar select{font-size:12px;padding:2px 4px;border-radius:6px;border:1px solid #E5C46A;background:#fff}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="testbar" id="testbar">
+  <b>테스트 모드</b>
+  <label>DAY <select id="daySel"></select></label>
+  <span id="dayType"></span>
+  <span style="margin-left:auto;opacity:.7">저장 안 됨 · 피드백은 예시</span>
+</div>
+
+<!-- 0. 이름 선택 -->
+<section class="screen on" id="s0">
+  <h1 class="hello">안녕하세요.<br>누구세요?</h1>
+  <p class="sub">이름을 누르면 오늘의 문장이 나옵니다.</p>
+  <div class="names" id="names"></div>
+</section>
+
+<!-- 1. 오늘의 문장 -->
+<section class="screen" id="s1">
+  <div class="top">
+    <div class="day">DAY <span id="dayNum">1</span><small>/ 20</small></div>
+    <div class="streak" id="streak"></div>
+  </div>
+  <div class="dots" id="dots"></div>
+
+  <div class="card" id="scriptCard"></div>
+  <div class="card" id="scriptCard2" style="display:none"></div>
+
+  <div class="card">
+    <div class="eyebrow">오늘 10분</div>
+    <div class="mission" id="mission"></div>
+  </div>
+
+  <div class="cta">
+    <button class="btn" onclick="go(2)">녹음하러 가기</button>
+    <div class="hint" id="hint1"></div>
+  </div>
+</section>
+
+<!-- 2. 녹음 -->
+<section class="screen" id="s2">
+  <div class="top"><div class="day">녹음</div><div class="streak" id="recDay"></div></div>
+  <div id="recArea"></div>
+  <div class="cta">
+    <button class="btn" id="submitBtn" onclick="submit()" disabled>인증하기</button>
+    <div class="hint">보내면 피드백이 바로 나옵니다.</div>
+  </div>
+</section>
+
+<!-- 3. 피드백 -->
+<section class="screen" id="s3">
+  <div class="stamp">
+    <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#17302C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></div>
+    <div><h2 id="stampTitle">DAY 1 인증 완료</h2><p id="stampSub"></p></div>
+  </div>
+  <div class="fb" id="fb"></div>
+  <div class="cta">
+    <button class="btn ghost" onclick="go(2)">다시 녹음하기</button>
+    <div class="hint">처음 녹음도 그대로 저장됩니다. 다시 하는 건 자유예요.</div>
+  </div>
+</section>
+
+</div>
+
+<script>
+const SCRIPTS = [{"id": "E4_SUDA_1_1_01", "order": 1, "title": "Waiting for winter vacation", "words": [{"en": "out", "ko": "끝이 난"}, {"en": "school is out", "ko": "방학을 하다, 학교가 끝이 나다."}, {"en": "winter", "ko": "겨울"}, {"en": "vacation", "ko": "방학"}, {"en": "winter vacation", "ko": "겨울 방학"}, {"en": "visit", "ko": "방문하다"}], "dialogue": [{"en": "School is out in four days.", "ko": "4일 있으면 학교 끝나(방학 해).", "role": "A", "n": 1}, {"en": "I can't wait for winter vacation.", "ko": "나는 빨리 겨울 방학이 왔으면 해.", "role": "B", "n": 2}, {"en": "Where are you going?", "ko": "어디로 가는데?", "role": "A", "n": 3}, {"en": "We are going to Seoul.", "ko": "우리는 서울로 갈거야.", "role": "B", "n": 4}, {"en": "Are you going to visit Seoul Tower?", "ko": "너는 서울 타워를 방문할 거니?", "role": "A", "n": 5}, {"en": "Yes, we are.", "ko": "응, 그럴거야.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_02", "order": 2, "title": "Going on a trip", "words": [{"en": "tour", "ko": "여행"}, {"en": "guide", "ko": "가이드, 안내인"}, {"en": "tour guide", "ko": "여행 안내인"}, {"en": "Australia", "ko": "호주"}, {"en": "Japan", "ko": "일본"}], "dialogue": [{"en": "This is Mr. Woods.", "ko": "여기는 우즈씨(Mr. Woods)입니다.", "role": "A", "n": 1}, {"en": "Is he your tour guide?", "ko": "그는 당신의 여행 가이드인가요?", "role": "B", "n": 2}, {"en": "Where are we going?", "ko": "우리는 어디로 가나요?", "role": "A", "n": 3}, {"en": "We are going to Australia.", "ko": "우리는 호주로 갑니다.", "role": "B", "n": 4}, {"en": "Where are they going?", "ko": "그들은 어디로 가나요?", "role": "A", "n": 5}, {"en": "They're going to Japan.", "ko": "그들은 일본으로 갑니다.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_03", "order": 3, "title": "Going to China", "words": [{"en": "teacher", "ko": "선생님"}, {"en": "Mexico", "ko": "멕시코"}, {"en": "be going to", "ko": "~ 할 예정이다"}, {"en": "China", "ko": "중국"}, {"en": "plane", "ko": "비행기"}, {"en": "by plane", "ko": "비행기로"}], "dialogue": [{"en": "This is Mr. Johnson.", "ko": "이쪽은 존슨(Johnson)씨입니다.", "role": "A", "n": 1}, {"en": "Is he a teacher?", "ko": "그는 선생님 입니까?", "role": "B", "n": 2}, {"en": "Are we going to Mexico?", "ko": "우리는 멕시코로 갈 예정입니까?", "role": "A", "n": 3}, {"en": "No, we aren't. We're going to China.", "ko": "아니요, 그렇지 않습니다. 우리는 중국으로 갈 예정입니다.", "role": "B", "n": 4}, {"en": "How are we going there?", "ko": "우리는 거기 어떻게 갑니까?", "role": "A", "n": 5}, {"en": "We are going by plane.", "ko": "우리는 비행기로 갑니다.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_04", "order": 4, "title": "Asking about possession 1", "words": [{"en": "suitcase", "ko": "여행 가방"}, {"en": "his", "ko": "그의 것"}, {"en": "money", "ko": "돈"}, {"en": "mine", "ko": "나의 것"}, {"en": "key", "ko": "열쇠"}], "dialogue": [{"en": "Is this your suitcase?", "ko": "이것은 당신의 여행가방인가요?", "role": "A", "n": 1}, {"en": "No, it isn't. It's his.", "ko": "아니요, 그렇지 않습니다. 그것은 그의 것입니다.", "role": "B", "n": 2}, {"en": "Is this his money?", "ko": "이것은 그의 돈입니까?", "role": "A", "n": 3}, {"en": "No, it isn't. It's mine.", "ko": "아니요, 그렇지 않습니다. 그것은 저의 것입니다.", "role": "B", "n": 4}, {"en": "Is this your key?", "ko": "이것은 당신의 열쇠인가요?", "role": "A", "n": 5}, {"en": "Yes, it is. Thank you.", "ko": "네, 그렇습니다. 감사합니다.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_05", "order": 5, "title": "Asking about possession 2", "words": [{"en": "wallet", "ko": "지갑"}, {"en": "pants", "ko": "바지"}, {"en": "this", "ko": "이것"}, {"en": "that", "ko": "저것"}], "dialogue": [{"en": "Is this your wallet?", "ko": "이것은 당신의 지갑입니까?", "role": "A", "n": 1}, {"en": "No, it isn't. It's his.", "ko": "아니요, 그렇지 않습니다. 그것은 그의 것입니다.", "role": "B", "n": 2}, {"en": "Are these your pants?", "ko": "이것들은 당신의 바지입니까?", "role": "A", "n": 3}, {"en": "Yes, they are.", "ko": "네, 그렇습니다.", "role": "B", "n": 4}, {"en": "Is this your T-shirt?", "ko": "이것은 당신의 셔츠인가요?", "role": "A", "n": 5}, {"en": "No, that’s his T-shirt.", "ko": "아니요, 그것은 그의 셔츠입니다.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_06", "order": 6, "title": "Watching monkey", "words": [{"en": "mountain", "ko": "산"}, {"en": "look", "ko": "보다"}, {"en": "monkey", "ko": "원숭이"}, {"en": "cute", "ko": "귀여운"}, {"en": "want", "ko": "원하다"}, {"en": "take a picture", "ko": "사진을 찍다"}, {"en": "camera", "ko": "사진기"}], "dialogue": [{"en": "That's the mountain.", "ko": "저것은 그 산이야.", "role": "A", "n": 1}, {"en": "Wow.", "ko": "와.", "role": "B", "n": 2}, {"en": "Look. There is a monkey.", "ko": "봐. 원숭이가 있다.", "role": "A", "n": 3}, {"en": "Are monkeys cute?", "ko": "원숭이들은 귀엽니?", "role": "B", "n": 4}, {"en": "I want to take a picture. Can I use your camera?", "ko": "나는 사진 찍고 싶어. 내가 당신의 카메라를 사용해도 되나요?", "role": "A", "n": 5}, {"en": "Sure. Go ahead.", "ko": "물론요. 그렇게 하세요.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_07", "order": 7, "title": "Conversation in a zoo", "words": [{"en": "see", "ko": "보다"}, {"en": "giraffe", "ko": "기린"}, {"en": "zebra", "ko": "얼룩말"}, {"en": "tall", "ko": "키가 큰"}, {"en": "taller", "ko": "키가 더 큰"}, {"en": "snake", "ko": "뱀"}], "dialogue": [{"en": "Did you see a giraffe?", "ko": "너는 기린을 보았니?", "role": "A", "n": 1}, {"en": "No, I didn't. But I saw a zebra.", "ko": "아니, 그렇지 않아. 하지만 나는 얼룩말은 봤어.", "role": "B", "n": 2}, {"en": "Is a zebra tall?", "ko": "얼룩말은 키가 크니?", "role": "A", "n": 3}, {"en": "Yes, it is. But a giraffe is taller.", "ko": "그래, 그러나 기린이 더 커.", "role": "B", "n": 4}, {"en": "Did you see a snake?", "ko": "너는 뱀을 봤니?", "role": "A", "n": 5}, {"en": "Yes, I did.", "ko": "응, 그랬어.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_08", "order": 8, "title": "Comparing", "words": [{"en": "pencil", "ko": "연필"}, {"en": "long", "ko": "(길이가) 긴"}, {"en": "longer", "ko": "(길이가) 더 긴"}, {"en": "mine", "ko": "나의 것"}, {"en": "elephant", "ko": "코끼리"}, {"en": "big", "ko": "큰"}, {"en": "whale", "ko": "고래"}, {"en": "bigger", "ko": "더 큰"}, {"en": "mouse", "ko": "쥐"}, {"en": "small", "ko": "(크기가) 작은"}, {"en": "ant", "ko": "개미"}, {"en": "smaller", "ko": "(크기가) 더 작은"}], "dialogue": [{"en": "Is this pencil long?", "ko": "이 연필은 깁니까?", "role": "A", "n": 1}, {"en": "Yes, it is. But mine is longer.", "ko": "네, 그렇습니다. 그러나 나의 것은 더 깁니다.", "role": "B", "n": 2}, {"en": "Is an elephant big?", "ko": "코끼리는 큰가요?", "role": "A", "n": 3}, {"en": "Yes, but a whale is bigger.", "ko": "네, 하지만 고래는 더 큽니다.", "role": "B", "n": 4}, {"en": "Is a mouse small?", "ko": "쥐는 작습니까?", "role": "A", "n": 5}, {"en": "Yes, but an ant is smaller.", "ko": "네, 하지만 개미는 더 작아요.", "role": "B", "n": 6}]}];
+const MEMBERS = ["김서연","박지훈","이하나","최민준","정수아","한도윤"];
+
+// DAY n → 스크립트/유형. 주 5일: 월(A낭독) 화(A+MY) 수(B낭독) 목(B+MY) 금(MY만)
+function plan(day){
+  const week = Math.ceil(day/5), wd = (day-1)%5;          // 0..4 = 월..금
+  const A = SCRIPTS[(week-1)*2], B = SCRIPTS[(week-1)*2+1];
+  const t = ["A","A_MY","B","B_MY","MY2"][wd];
+  return {week, wd, A, B, type:t,
+    script: t.startsWith("A")?A:(t.startsWith("B")?B:null),
+    label: ["낭독","낭독 + MY SENTENCE","낭독","낭독 + MY SENTENCE","복습 · MY SENTENCE"][wd]};
+}
+
+let state = {name:null, day:1, doneDays:[], recs:{}};
+const $ = s => document.querySelector(s);
+
+// ─ 이름
+$("#names").innerHTML = MEMBERS.map(n=>`<button onclick="pick('${n}')">${n}</button>`).join("");
+function pick(n){ state.name=n; render1(); go(1); }
+
+// ─ 테스트 바
+for(let d=1;d<=20;d++){ const o=document.createElement("option"); o.value=d; o.textContent=d; $("#daySel").appendChild(o); }
+$("#daySel").onchange = e => { state.day=+e.target.value; state.doneDays=Array.from({length:state.day-1},(_,i)=>i+1).filter(()=>Math.random()>.25); state.recs={}; render1(); if(!$("#s0").classList.contains("on")) go(1); };
+$("#daySel").dispatchEvent(new Event("change"));
+
+function go(n){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on")); $("#s"+n).classList.add("on"); window.scrollTo(0,0); if(n===2) render2(); }
+
+// ─ 화면 1
+function scriptHTML(s, full=true){
+  return `<div class="eyebrow">스크립트 ${s.order}</div><div class="title">${s.title}</div>
+  ${full?`<div class="words">${s.words.map(w=>`<span class="word">${w.en}<span>${w.ko}</span></span>`).join("")}</div>
+  <div style="height:14px"></div>`:""}
+  ${s.dialogue.map(d=>`<div class="line"><div class="role ${d.role==="B"?"b":""}">${d.role}</div><div><div class="en">${d.en}</div><div class="ko">${d.ko}</div></div></div>`).join("")}
+  <button class="play" onclick="alert('예시 음성은 아직 연결 전입니다.')">예시 음성 듣기</button>`;
+}
+function render1(){
+  const p = plan(state.day);
+  $("#dayNum").textContent = state.day;
+  $("#dayType").textContent = `${p.week}주차 ${"월화수목금"[p.wd]} · ${p.label}`;
+  const streak = (()=>{let c=0; for(let d=state.day-1; d>=1 && state.doneDays.includes(d); d--) c++; return c;})();
+  $("#streak").innerHTML = streak? `<b>${streak}일</b> 연속` : (state.day>1? "다시 시작하는 날":"첫날");
+  $("#dots").innerHTML = Array.from({length:20},(_,i)=>{const d=i+1; return `<div class="dot ${state.doneDays.includes(d)?"done":""} ${d===state.day?"today":""}"></div>`;}).join("");
+
+  if(p.type==="MY2"){
+    $("#scriptCard").innerHTML = `<div class="eyebrow">이번 주 두 스크립트</div><div class="title">${p.A.title} · ${p.B.title}</div><div class="ko">오늘은 낭독 없이, 두 패턴으로 내 문장만 만들어 말합니다.</div>`;
+    $("#scriptCard2").style.display="none";
+  } else {
+    $("#scriptCard").innerHTML = scriptHTML(p.script);
+    $("#scriptCard2").style.display="none";
+  }
+  const m = {
+    A:  [["SUDA 학습","7분","단어와 대화를 소리 내어 따라 읽기"],["인증","3분","대화 전체를 한 번에 녹음"]],
+    A_MY:[["SUDA 학습","5분","대화 다시 읽기"],["MY SENTENCE","3분","이 패턴으로 내 문장 2~3개"],["인증","2분","원문 한 번 + 내 문장 녹음"]],
+    MY2:[["복습","4분","이번 주 두 대화 다시 읽기"],["MY SENTENCE","4분","두 패턴으로 내 문장 만들기"],["인증","2분","내 문장 녹음"]],
+  };
+  m.B=m.A; m.B_MY=m.A_MY;
+  $("#mission").innerHTML = m[p.type].map(([t,min,d])=>`<label><input type="checkbox"><b>${t}</b><span class="ko" style="margin-top:0">${d}</span><em>${min}</em></label>`).join("");
+  $("#hint1").textContent = p.type==="A"||p.type==="B" ? "오늘은 대화 전체를 한 번 녹음하면 끝." : "";
+}
+
+// ─ 화면 2 (녹음)
+function render2(){
+  const p = plan(state.day);
+  $("#recDay").textContent = `DAY ${state.day} · ${p.label}`;
+  let blocks = [];
+  const mini = s => `<div class="script-mini">${s.dialogue.map(d=>`<p><b>${d.role}</b>${d.en}</p>`).join("")}</div>`;
+  if(p.type==="A"||p.type==="B"){
+    blocks.push({id:"read", h:"대화 전체 낭독", s:"A와 B 모두 내 목소리로", body:mini(p.script)});
+  } else if(p.type==="A_MY"||p.type==="B_MY"){
+    blocks.push({id:"read", h:"원문 한 번 읽기", s:"가볍게, 익숙해진 만큼만", body:mini(p.script)});
+    const pat = p.script.dialogue[0].en;
+    for(let i=1;i<=3;i++) blocks.push({id:"my"+i, h:`MY SENTENCE ${i}`, s:i===3?"선택":"필수", my:true, pattern:pat});
+  } else {
+    const pa=p.A.dialogue[0].en, pb=p.B.dialogue[0].en;
+    blocks.push({id:"my1", h:"MY SENTENCE 1", s:`${p.A.title} 패턴`, my:true, pattern:pa});
+    blocks.push({id:"my2", h:"MY SENTENCE 2", s:`${p.B.title} 패턴`, my:true, pattern:pb});
+    blocks.push({id:"my3", h:"MY SENTENCE 3", s:"선택 · 아무 패턴", my:true, pattern:pa});
+  }
+  $("#recArea").innerHTML = blocks.map(b=>`
+    <div class="card rec-block" data-id="${b.id}">
+      <div class="rec-head"><h3>${b.h}</h3><span>${b.s}</span></div>
+      ${b.body||""}
+      ${b.my?`<div class="my"><div class="pattern">원문 패턴: <b>${b.pattern}</b></div><textarea placeholder="이 패턴으로 내 이야기를 영어로 써 보세요" oninput="check()"></textarea></div>`:""}
+      <div class="recorder">
+        <button class="mic" onclick="toggleRec('${b.id}')" aria-label="녹음">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        </button>
+        <div class="rec-state"><div class="t">눌러서 녹음</div><div class="s">다시 누르면 멈춰요</div></div>
+      </div>
+    </div>`).join("");
+  state.recs = {}; check();
+}
+
+let media = {rec:null, id:null, chunks:[], t0:0, timer:null};
+async function toggleRec(id){
+  const block = document.querySelector(`[data-id="${id}"]`), mic = block.querySelector(".mic"), st = block.querySelector(".rec-state");
+  if(media.rec && media.id===id){ media.rec.stop(); return; }
+  if(media.rec) return;
+  let stream;
+  try{ stream = await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch(e){ st.querySelector(".t").textContent="마이크 권한이 필요해요"; st.querySelector(".s").textContent="브라우저 설정에서 마이크를 허용해 주세요"; return; }
+  const rec = new MediaRecorder(stream); media = {rec, id, chunks:[], t0:Date.now()};
+  rec.ondataavailable = e => media.chunks.push(e.data);
+  rec.onstop = () => {
+    stream.getTracks().forEach(t=>t.stop());
+    const blob = new Blob(media.chunks,{type:rec.mimeType}), sec = Math.round((Date.now()-media.t0)/1000);
+    state.recs[id] = {blob, sec};
+    clearInterval(media.timer); media = {rec:null};
+    mic.classList.remove("rec"); mic.classList.add("done");
+    st.innerHTML = `<div class="t">녹음됨 · ${sec}초</div><div class="s">다시 누르면 새로 녹음</div><audio controls src="${URL.createObjectURL(blob)}"></audio>`;
+    check();
+  };
+  rec.start(); mic.classList.add("rec"); mic.classList.remove("done");
+  st.innerHTML = `<div class="t">녹음 중 · <span id="tm">0</span>초</div><div class="s">다 읽었으면 눌러서 멈추기</div>`;
+  media.timer = setInterval(()=>{ const el=$("#tm"); if(el) el.textContent=Math.round((Date.now()-media.t0)/1000); },500);
+}
+function check(){
+  const p = plan(state.day); let ok;
+  const has = id => !!state.recs[id];
+  const txt = id => { const t=document.querySelector(`[data-id="${id}"] textarea`); return t && t.value.trim().length>2; };
+  if(p.type==="A"||p.type==="B") ok = has("read");
+  else if(p.type==="MY2") ok = txt("my1")&&has("my1")&&txt("my2")&&has("my2");
+  else ok = has("read")&&txt("my1")&&has("my1")&&txt("my2")&&has("my2");
+  $("#submitBtn").disabled = !ok;
+}
+
+// ─ 화면 3 (예시 피드백)
+function submit(){
+  const p = plan(state.day);
+  state.doneDays = [...new Set([...state.doneDays, state.day])];
+  $("#stampTitle").textContent = `DAY ${state.day} 인증 완료`;
+  $("#stampSub").textContent = `${state.name}님, 오늘도 멈추지 않았어요.`;
+  const my1 = (document.querySelector('[data-id="my1"] textarea')||{}).value || "";
+  const cards = [];
+  if(state.recs.read){
+    const line = p.script.dialogue[1].en;
+    cards.push(["낭독", `"${line}"에서 <span class="heard">wait</span>가 <span class="heard">weight</span>로 들렸어요. 속도는 예시와 비슷했어요.`, ""]);
+  }
+  if(my1){
+    cards.push(["MY SENTENCE", `${my1.replace(/\b(a|an|the)\b/i,"<s>$1</s> <ins>the</ins>")}<br>원문 패턴을 그대로 살렸어요. 관사만 한 번 더 확인해요.`, "sun"]);
+  }
+  cards.push(["오늘의 한 마디", state.doneDays.length>1 ? `어제보다 대화 후반부가 끊기지 않고 이어졌어요. 그 흐름 그대로 가요.` : `첫 녹음을 끝까지 했어요. 내일은 조금만 더 편하게.`, "rose"]);
+  $("#fb").innerHTML = cards.map(([h,t,c])=>`<div class="card ${c}"><h4>${h}</h4><p>${t}</p></div>`).join("");
+  go(3);
+}
+</script>
+</body>
+</html>
