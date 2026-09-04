@@ -103,12 +103,18 @@ input,textarea{font:inherit;color:inherit}
 .fb ins{text-decoration:none;color:var(--green);font-weight:700}
 .fb .heard{background:var(--sun-soft);padding:0 4px;border-radius:4px}
 
-/* ── 이름 선택 ── */
+/* ── 시작 화면 ── */
 .hello{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin:28px 0 6px}
 .sub{color:var(--ink-2);margin-bottom:24px}
-.names{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.names button{padding:18px 12px;border-radius:14px;background:#fff;box-shadow:0 1px 0 var(--line);font-size:17px;font-weight:600}
-.names button:active{background:var(--green-soft)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:var(--ink-2);margin-bottom:6px}
+.field input{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font-size:17px}
+.field input:focus{outline:none;border-color:var(--green)}
+.msg{font-size:13px;margin-top:6px;min-height:18px}
+.msg.ok{color:var(--green)} .msg.no{color:var(--rose)}
+.linkbtn{display:block;width:100%;text-align:center;margin-top:12px;font-size:14px;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px}
+.who{display:flex;justify-content:flex-end;margin-bottom:4px}
+.who button{font-size:12px;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px}
 
 /* ── 테스트 바 ── */
 .testbar{position:sticky;top:0;z-index:5;background:#FFF4D6;border-bottom:1px solid #F2D58A;font-size:12px;padding:6px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -125,15 +131,31 @@ input,textarea{font:inherit;color:inherit}
   <span style="margin-left:auto;opacity:.7">저장 안 됨 · 피드백은 예시</span>
 </div>
 
-<!-- 0. 이름 선택 -->
+<!-- 0. 시작: 가입 / 다시 들어오기 -->
 <section class="screen on" id="s0">
-  <h1 class="hello">안녕하세요.<br>누구세요?</h1>
-  <p class="sub">이름을 누르면 오늘의 문장이 나옵니다.</p>
-  <div class="names" id="names"></div>
+  <h1 class="hello">SUDA 10분,<br>오늘도 인증해요.</h1>
+  <p class="sub" id="s0sub">처음이면 아래를 채워 주세요. 1분이면 끝나요.</p>
+
+  <div class="card" id="joinBox">
+    <div class="field"><label>이름</label><input id="jName" placeholder="실명" autocomplete="name"></div>
+    <div class="field"><label>닉네임</label><input id="jNick" placeholder="화면에 보일 이름 (영어·한글 2~10자)" autocomplete="off" oninput="nickCheck()"><div class="msg" id="nickMsg"></div></div>
+    <div class="field"><label>전화번호</label><input id="jPhone" placeholder="010-0000-0000" inputmode="tel" autocomplete="tel"></div>
+    <button class="btn" id="joinBtn" onclick="join()" disabled style="margin-top:8px">시작하기</button>
+    <button class="linkbtn" onclick="showLogin()">이미 가입했어요</button>
+  </div>
+
+  <div class="card" id="loginBox" style="display:none">
+    <div class="field"><label>닉네임</label><input id="lNick" autocomplete="off"></div>
+    <div class="field"><label>전화번호 뒷 4자리</label><input id="lPhone" inputmode="numeric" maxlength="4" placeholder="0000"></div>
+    <div class="msg" id="loginMsg"></div>
+    <button class="btn" onclick="login()" style="margin-top:8px">들어가기</button>
+    <button class="linkbtn" onclick="showJoin()">처음이에요</button>
+  </div>
 </section>
 
 <!-- 1. 오늘의 문장 -->
 <section class="screen" id="s1">
+  <div class="who"><span style="font-size:12px;color:var(--ink-2);margin-right:auto" id="whoNick"></span><button onclick="logout()">다른 사람이에요</button></div>
   <div class="top">
     <div class="day">DAY <span id="dayNum">1</span><small>/ 20</small></div>
     <div class="streak" id="streak"></div>
@@ -181,7 +203,8 @@ input,textarea{font:inherit;color:inherit}
 
 <script>
 const SCRIPTS = [{"id": "E4_SUDA_1_1_01", "order": 1, "title": "Waiting for winter vacation", "words": [{"en": "out", "ko": "끝이 난"}, {"en": "school is out", "ko": "방학을 하다, 학교가 끝이 나다."}, {"en": "winter", "ko": "겨울"}, {"en": "vacation", "ko": "방학"}, {"en": "winter vacation", "ko": "겨울 방학"}, {"en": "visit", "ko": "방문하다"}], "dialogue": [{"en": "School is out in four days.", "ko": "4일 있으면 학교 끝나(방학 해).", "role": "A", "n": 1}, {"en": "I can't wait for winter vacation.", "ko": "나는 빨리 겨울 방학이 왔으면 해.", "role": "B", "n": 2}, {"en": "Where are you going?", "ko": "어디로 가는데?", "role": "A", "n": 3}, {"en": "We are going to Seoul.", "ko": "우리는 서울로 갈거야.", "role": "B", "n": 4}, {"en": "Are you going to visit Seoul Tower?", "ko": "너는 서울 타워를 방문할 거니?", "role": "A", "n": 5}, {"en": "Yes, we are.", "ko": "응, 그럴거야.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_02", "order": 2, "title": "Going on a trip", "words": [{"en": "tour", "ko": "여행"}, {"en": "guide", "ko": "가이드, 안내인"}, {"en": "tour guide", "ko": "여행 안내인"}, {"en": "Australia", "ko": "호주"}, {"en": "Japan", "ko": "일본"}], "dialogue": [{"en": "This is Mr. Woods.", "ko": "여기는 우즈씨(Mr. Woods)입니다.", "role": "A", "n": 1}, {"en": "Is he your tour guide?", "ko": "그는 당신의 여행 가이드인가요?", "role": "B", "n": 2}, {"en": "Where are we going?", "ko": "우리는 어디로 가나요?", "role": "A", "n": 3}, {"en": "We are going to Australia.", "ko": "우리는 호주로 갑니다.", "role": "B", "n": 4}, {"en": "Where are they going?", "ko": "그들은 어디로 가나요?", "role": "A", "n": 5}, {"en": "They're going to Japan.", "ko": "그들은 일본으로 갑니다.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_03", "order": 3, "title": "Going to China", "words": [{"en": "teacher", "ko": "선생님"}, {"en": "Mexico", "ko": "멕시코"}, {"en": "be going to", "ko": "~ 할 예정이다"}, {"en": "China", "ko": "중국"}, {"en": "plane", "ko": "비행기"}, {"en": "by plane", "ko": "비행기로"}], "dialogue": [{"en": "This is Mr. Johnson.", "ko": "이쪽은 존슨(Johnson)씨입니다.", "role": "A", "n": 1}, {"en": "Is he a teacher?", "ko": "그는 선생님 입니까?", "role": "B", "n": 2}, {"en": "Are we going to Mexico?", "ko": "우리는 멕시코로 갈 예정입니까?", "role": "A", "n": 3}, {"en": "No, we aren't. We're going to China.", "ko": "아니요, 그렇지 않습니다. 우리는 중국으로 갈 예정입니다.", "role": "B", "n": 4}, {"en": "How are we going there?", "ko": "우리는 거기 어떻게 갑니까?", "role": "A", "n": 5}, {"en": "We are going by plane.", "ko": "우리는 비행기로 갑니다.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_04", "order": 4, "title": "Asking about possession 1", "words": [{"en": "suitcase", "ko": "여행 가방"}, {"en": "his", "ko": "그의 것"}, {"en": "money", "ko": "돈"}, {"en": "mine", "ko": "나의 것"}, {"en": "key", "ko": "열쇠"}], "dialogue": [{"en": "Is this your suitcase?", "ko": "이것은 당신의 여행가방인가요?", "role": "A", "n": 1}, {"en": "No, it isn't. It's his.", "ko": "아니요, 그렇지 않습니다. 그것은 그의 것입니다.", "role": "B", "n": 2}, {"en": "Is this his money?", "ko": "이것은 그의 돈입니까?", "role": "A", "n": 3}, {"en": "No, it isn't. It's mine.", "ko": "아니요, 그렇지 않습니다. 그것은 저의 것입니다.", "role": "B", "n": 4}, {"en": "Is this your key?", "ko": "이것은 당신의 열쇠인가요?", "role": "A", "n": 5}, {"en": "Yes, it is. Thank you.", "ko": "네, 그렇습니다. 감사합니다.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_05", "order": 5, "title": "Asking about possession 2", "words": [{"en": "wallet", "ko": "지갑"}, {"en": "pants", "ko": "바지"}, {"en": "this", "ko": "이것"}, {"en": "that", "ko": "저것"}], "dialogue": [{"en": "Is this your wallet?", "ko": "이것은 당신의 지갑입니까?", "role": "A", "n": 1}, {"en": "No, it isn't. It's his.", "ko": "아니요, 그렇지 않습니다. 그것은 그의 것입니다.", "role": "B", "n": 2}, {"en": "Are these your pants?", "ko": "이것들은 당신의 바지입니까?", "role": "A", "n": 3}, {"en": "Yes, they are.", "ko": "네, 그렇습니다.", "role": "B", "n": 4}, {"en": "Is this your T-shirt?", "ko": "이것은 당신의 셔츠인가요?", "role": "A", "n": 5}, {"en": "No, that’s his T-shirt.", "ko": "아니요, 그것은 그의 셔츠입니다.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_06", "order": 6, "title": "Watching monkey", "words": [{"en": "mountain", "ko": "산"}, {"en": "look", "ko": "보다"}, {"en": "monkey", "ko": "원숭이"}, {"en": "cute", "ko": "귀여운"}, {"en": "want", "ko": "원하다"}, {"en": "take a picture", "ko": "사진을 찍다"}, {"en": "camera", "ko": "사진기"}], "dialogue": [{"en": "That's the mountain.", "ko": "저것은 그 산이야.", "role": "A", "n": 1}, {"en": "Wow.", "ko": "와.", "role": "B", "n": 2}, {"en": "Look. There is a monkey.", "ko": "봐. 원숭이가 있다.", "role": "A", "n": 3}, {"en": "Are monkeys cute?", "ko": "원숭이들은 귀엽니?", "role": "B", "n": 4}, {"en": "I want to take a picture. Can I use your camera?", "ko": "나는 사진 찍고 싶어. 내가 당신의 카메라를 사용해도 되나요?", "role": "A", "n": 5}, {"en": "Sure. Go ahead.", "ko": "물론요. 그렇게 하세요.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_07", "order": 7, "title": "Conversation in a zoo", "words": [{"en": "see", "ko": "보다"}, {"en": "giraffe", "ko": "기린"}, {"en": "zebra", "ko": "얼룩말"}, {"en": "tall", "ko": "키가 큰"}, {"en": "taller", "ko": "키가 더 큰"}, {"en": "snake", "ko": "뱀"}], "dialogue": [{"en": "Did you see a giraffe?", "ko": "너는 기린을 보았니?", "role": "A", "n": 1}, {"en": "No, I didn't. But I saw a zebra.", "ko": "아니, 그렇지 않아. 하지만 나는 얼룩말은 봤어.", "role": "B", "n": 2}, {"en": "Is a zebra tall?", "ko": "얼룩말은 키가 크니?", "role": "A", "n": 3}, {"en": "Yes, it is. But a giraffe is taller.", "ko": "그래, 그러나 기린이 더 커.", "role": "B", "n": 4}, {"en": "Did you see a snake?", "ko": "너는 뱀을 봤니?", "role": "A", "n": 5}, {"en": "Yes, I did.", "ko": "응, 그랬어.", "role": "B", "n": 6}]}, {"id": "E4_SUDA_1_1_08", "order": 8, "title": "Comparing", "words": [{"en": "pencil", "ko": "연필"}, {"en": "long", "ko": "(길이가) 긴"}, {"en": "longer", "ko": "(길이가) 더 긴"}, {"en": "mine", "ko": "나의 것"}, {"en": "elephant", "ko": "코끼리"}, {"en": "big", "ko": "큰"}, {"en": "whale", "ko": "고래"}, {"en": "bigger", "ko": "더 큰"}, {"en": "mouse", "ko": "쥐"}, {"en": "small", "ko": "(크기가) 작은"}, {"en": "ant", "ko": "개미"}, {"en": "smaller", "ko": "(크기가) 더 작은"}], "dialogue": [{"en": "Is this pencil long?", "ko": "이 연필은 깁니까?", "role": "A", "n": 1}, {"en": "Yes, it is. But mine is longer.", "ko": "네, 그렇습니다. 그러나 나의 것은 더 깁니다.", "role": "B", "n": 2}, {"en": "Is an elephant big?", "ko": "코끼리는 큰가요?", "role": "A", "n": 3}, {"en": "Yes, but a whale is bigger.", "ko": "네, 하지만 고래는 더 큽니다.", "role": "B", "n": 4}, {"en": "Is a mouse small?", "ko": "쥐는 작습니까?", "role": "A", "n": 5}, {"en": "Yes, but an ant is smaller.", "ko": "네, 하지만 개미는 더 작아요.", "role": "B", "n": 6}]}];
-const MEMBERS = ["김서연","박지훈","이하나","최민준","정수아","한도윤"];
+// 테스트용 가짜 회원 명단 (실제로는 DB에서 확인)
+const TAKEN = {"sunny":"1234","minjun":"5678","hana":"9012"};
 
 // DAY n → 스크립트/유형. 주 5일: 월(A낭독) 화(A+MY) 수(B낭독) 목(B+MY) 금(MY만)
 function plan(day){
@@ -196,14 +219,38 @@ function plan(day){
 let state = {name:null, day:1, doneDays:[], recs:{}};
 const $ = s => document.querySelector(s);
 
-// ─ 이름
-$("#names").innerHTML = MEMBERS.map(n=>`<button onclick="pick('${n}')">${n}</button>`).join("");
-function pick(n){ state.name=n; render1(); go(1); }
+// ─ 시작 화면
+function showLogin(){ $("#joinBox").style.display="none"; $("#loginBox").style.display="block"; $("#s0sub").textContent="닉네임과 전화번호 뒷 4자리로 들어옵니다."; }
+function showJoin(){ $("#loginBox").style.display="none"; $("#joinBox").style.display="block"; $("#s0sub").textContent="처음이면 아래를 채워 주세요. 1분이면 끝나요."; }
+function nickCheck(){
+  const v=$("#jNick").value.trim(), m=$("#nickMsg");
+  m.className="msg";
+  if(!v){ m.textContent=""; }
+  else if(v.length<2||v.length>10){ m.textContent="2~10자로 해 주세요"; m.className="msg no"; }
+  else if(TAKEN[v.toLowerCase()]){ m.textContent="이미 쓰는 닉네임이에요. 다른 걸로 해 주세요"; m.className="msg no"; }
+  else { m.textContent="사용할 수 있어요"; m.className="msg ok"; }
+  $("#joinBtn").disabled = !(m.className==="msg ok");
+}
+function join(){
+  const name=$("#jName").value.trim(), nick=$("#jNick").value.trim(), phone=$("#jPhone").value.replace(/\D/g,"");
+  if(!name){ alert("이름을 입력해 주세요"); return; }
+  if(phone.length<10){ alert("전화번호를 확인해 주세요"); return; }
+  enter(nick);
+}
+function login(){
+  const nick=$("#lNick").value.trim(), last=$("#lPhone").value.trim(), m=$("#loginMsg");
+  if(TAKEN[nick.toLowerCase()]===last){ enter(nick); }
+  else { m.textContent="닉네임 또는 번호가 맞지 않아요"; m.className="msg no"; }
+}
+function enter(nick){ state.name=nick; try{localStorage.setItem("suda_nick",nick);}catch(e){} $("#whoNick").textContent=nick+"님"; render1(); go(1); }
+function logout(){ try{localStorage.removeItem("suda_nick");}catch(e){} state.name=null; showLogin(); go(0); }
+(function(){ let n=null; try{n=localStorage.getItem("suda_nick");}catch(e){} if(n){ state.name=n; $("#whoNick").textContent=n+"님"; } })();
 
 // ─ 테스트 바
 for(let d=1;d<=20;d++){ const o=document.createElement("option"); o.value=d; o.textContent=d; $("#daySel").appendChild(o); }
-$("#daySel").onchange = e => { state.day=+e.target.value; state.doneDays=Array.from({length:state.day-1},(_,i)=>i+1).filter(()=>Math.random()>.25); state.recs={}; render1(); if(!$("#s0").classList.contains("on")) go(1); };
+$("#daySel").onchange = e => { state.day=+e.target.value; state.doneDays=Array.from({length:state.day-1},(_,i)=>i+1).filter(()=>Math.random()>.25); state.recs={}; if(state.name){ render1(); if(!$("#s0").classList.contains("on")) go(1); } };
 $("#daySel").dispatchEvent(new Event("change"));
+if(state.name){ render1(); go(1); }
 
 function go(n){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on")); $("#s"+n).classList.add("on"); window.scrollTo(0,0); if(n===2) render2(); }
 
