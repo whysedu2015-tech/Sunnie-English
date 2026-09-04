@@ -46,8 +46,6 @@ input,textarea{font:inherit;color:inherit}
 .role.b{background:var(--sun);color:var(--ink)}
 .en{font-size:17px;font-weight:600;line-height:1.4}
 .ko{font-size:14px;color:var(--ink-2);margin-top:2px}
-.play{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:9px 14px;border-radius:999px;background:var(--paper);color:var(--ink-2);font-size:14px;font-weight:600}
-.play::before{content:"";width:0;height:0;border-left:9px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent}
 
 /* ── 미션 체크 ── */
 .mission{display:flex;flex-direction:column;gap:6px;margin-top:4px}
@@ -215,7 +213,7 @@ function scriptHTML(s, full=true){
   ${full?`<div class="words">${s.words.map(w=>`<span class="word">${w.en}<span>${w.ko}</span></span>`).join("")}</div>
   <div style="height:14px"></div>`:""}
   ${s.dialogue.map(d=>`<div class="line"><div class="role ${d.role==="B"?"b":""}">${d.role}</div><div><div class="en">${d.en}</div><div class="ko">${d.ko}</div></div></div>`).join("")}
-  <button class="play" onclick="alert('예시 음성은 아직 연결 전입니다.')">예시 음성 듣기</button>`;
+`;
 }
 function render1(){
   const p = plan(state.day);
