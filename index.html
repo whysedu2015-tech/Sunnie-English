@@ -378,7 +378,7 @@ function check(){
 // ───────── 제출: 파일 올리고 기록 ─────────
 async function submit(){
   const p=plan(state.day), btn=$("#submitBtn"); btn.disabled=true; btn.textContent="올리는 중…";
-  const ts=Date.now(), base=`${state.member.id}/day${String(state.day).padStart(2,"0")}_${ts}`;
+  const ts=Date.now(), safeNick=state.member.nickname.replace(/[^\w가-힣-]/g,"_"), base=`${safeNick}_${state.member.id.slice(0,8)}/day${String(state.day).padStart(2,"0")}_${ts}`;
   try{
     let reading_path=null, my=[];
     if(state.recs.read){ reading_path=await upload(`${base}_read.${state.recs.read.ext}`, state.recs.read.blob); }
