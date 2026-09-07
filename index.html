@@ -408,7 +408,7 @@ async function submit(){
 }
 let pollTimer=null;
 function esc(t){ return String(t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
-function md(t){ return esc(t).replace(/~~(.+?)~~/g,"<s>$1</s>").replace(/\*\*(.+?)\*\*/g,"<ins>$1</ins>"); }
+function md(t){ return esc(t).replace(/~~(.+?)~~/g,"<s>$1</s>").replace(/\*\*(.+?)\*\*/g,"<ins>$1</ins>").replace(/\n/g,"<br>"); }
 function openStamp(){
   $("#stampTitle").textContent=`DAY ${state.day} 인증 완료`;
   $("#stampSub").textContent=`${state.member.nickname}님, 오늘도 멈추지 않았어요.`;
