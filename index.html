@@ -31,6 +31,9 @@ input,textarea{font:inherit;color:inherit}
 .dot{aspect-ratio:1;border-radius:6px;background:var(--line)}
 .dot.done{background:var(--green)}
 .dot.today{background:var(--sun);box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--sun)}
+.dot[onclick]{cursor:pointer}
+.dot.lock{opacity:.35}
+.dots-hint{font-size:12px;color:var(--ink-2);margin:-14px 0 20px;text-align:center}
 
 /* ── 문장 카드 ── */
 .card{background:var(--white);border-radius:var(--radius);padding:18px;box-shadow:0 1px 0 var(--line)}
@@ -163,6 +166,7 @@ input,textarea{font:inherit;color:inherit}
     <div class="streak" id="streak"></div>
   </div>
   <div class="dots" id="dots"></div>
+  <div class="dots-hint" id="dotsHint"></div>
 
   <div class="card" id="scriptCard"></div>
   <div class="card" id="scriptCard2" style="display:none"></div>
@@ -197,7 +201,9 @@ input,textarea{font:inherit;color:inherit}
   </div>
   <div class="fb" id="fb"></div>
   <div class="cta">
-    <button class="btn ghost" onclick="go(2)">다시 녹음하기</button>
+    <button class="btn" id="nextBtn" onclick="pickDay(state.day+1); go(1)" style="display:none;margin-bottom:10px">다음 DAY 이어서 하기</button>
+    <button class="btn ghost" onclick="go(1)">홈으로</button>
+    <button class="btn ghost" onclick="go(2)" style="margin-top:10px">다시 녹음하기</button>
     <div class="hint">처음 녹음도 그대로 저장됩니다. 다시 하는 건 자유예요.</div>
   </div>
 </section>
@@ -222,6 +228,10 @@ let SCHEDULE = [], SCRIPTS = {};
 let state = {member:null, day:1, doneDays:[], recs:{}, attempt:1};
 
 // ───────── 날짜 → DAY (주말 제외, 시작일 = DAY 1) ─────────
+// 순서대로 진행: 완료한 마지막 DAY의 다음 (최대 20)
+function nextDay(){ const mx=state.doneDays.length?Math.max(...state.doneDays):0; return Math.min(mx+1,20); }
+function unlocked(d){ return d<=nextDay(); }
+function pickDay(d){ if(!unlocked(d)) return; state.day=d; state.recs={}; render1(); window.scrollTo(0,0); }
 function calcDay(startedOn){
   const s=new Date(startedOn+"T00:00:00"), t=new Date(); t.setHours(0,0,0,0);
   let d=0; for(let x=new Date(s); x<=t; x.setDate(x.getDate()+1)){ const w=x.getDay(); if(w!==0&&w!==6) d++; }
@@ -283,8 +293,8 @@ async function login(){
 async function enter(mem){
   state.member=mem; try{ localStorage.setItem("suda_member",JSON.stringify(mem)); }catch(e){}
   $("#whoNick").textContent=mem.nickname+"님";
-  if(!TEST) state.day=calcDay(mem.started_on);
   try{ state.doneDays=await rpc("my_progress",{p_member:mem.id}); }catch(e){ state.doneDays=[]; }
+  if(!TEST) state.day=nextDay();
   render1(); go(1);
 }
 function logout(){ try{ localStorage.removeItem("suda_member"); }catch(e){} state.member=null; showLogin(); go(0); }
@@ -303,8 +313,9 @@ function render1(){
   $("#dayType").textContent=`${p.week}주차 ${"월화수목금"[p.wd]} · ${p.label}`;
   const streak=(()=>{let c=0; for(let d=state.day-1; d>=1&&state.doneDays.includes(d); d--) c++; return c;})();
   const doneToday=state.doneDays.includes(state.day);
-  $("#streak").innerHTML = doneToday ? `<b>오늘 인증 완료</b>` : streak? `<b>${streak}일</b> 연속` : (state.day>1?"다시 시작하는 날":"첫날");
-  $("#dots").innerHTML=Array.from({length:20},(_,i)=>{const d=i+1; return `<div class="dot ${state.doneDays.includes(d)?"done":""} ${d===state.day?"today":""}"></div>`;}).join("");
+  $("#streak").innerHTML = doneToday ? `<b>DAY ${state.day} 인증 완료</b>` : streak? `<b>${streak}일</b> 연속` : (state.day>1?"다음 DAY":"첫날");
+  $("#dots").innerHTML=Array.from({length:20},(_,i)=>{const d=i+1; const u=unlocked(d); return `<div class="dot ${state.doneDays.includes(d)?"done":""} ${d===state.day?"today":""} ${u?"":"lock"}" ${u?`onclick="pickDay(${d})"`:""} title="DAY ${d}"></div>`;}).join("");
+  $("#dotsHint").textContent = doneToday && state.day<20 ? `DAY ${state.day+1}이 열렸어요. 위 칸을 눌러 이어서 할 수 있어요.` : "완료한 DAY는 칸을 눌러 다시 열 수 있어요.";
   if(p.type==="MY2"){
     $("#scriptCard").innerHTML=`<div class="eyebrow">이번 주 두 스크립트</div><div class="title">${p.A.title} · ${p.B.title}</div><div class="ko">오늘은 낭독 없이, 두 대화의 표현으로 내 문장만 만들어 말합니다.</div>`;
   } else { $("#scriptCard").innerHTML=scriptHTML(p.script); }
@@ -313,7 +324,7 @@ function render1(){
     MY2:[["복습","4분","이번 주 두 대화 다시 읽기"],["MY SENTENCE","4분","두 대화 표현으로 내 문장 3개 이상"],["인증","2분","내 문장 이어서 녹음"]]};
   m.B=m.A; m.B_MY=m.A_MY;
   $("#mission").innerHTML=m[p.type].map(([t,min,d])=>`<label><input type="checkbox"><b>${t}</b><span class="ko" style="margin-top:0">${d}</span><em>${min}</em></label>`).join("");
-  $("#hint1").textContent = doneToday ? "오늘은 이미 인증했어요. 다시 녹음해도 돼요." : (p.type==="A"||p.type==="B" ? "오늘은 대화 전체를 한 번 녹음하면 끝." : "");
+  $("#hint1").textContent = doneToday ? "이 DAY는 이미 인증했어요. 다시 녹음해도 돼요." : (p.type==="A"||p.type==="B" ? "오늘은 대화 전체를 한 번 녹음하면 끝." : "");
   $("#goRec").textContent = doneToday ? "다시 녹음하기" : "녹음하러 가기";
   $("#seeFb").style.display = doneToday ? "block" : "none";
 }
@@ -410,6 +421,7 @@ let pollTimer=null;
 function esc(t){ return String(t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
 function md(t){ return esc(t).replace(/~~(.+?)~~/g,"<s>$1</s>").replace(/\*\*(.+?)\*\*/g,"<ins>$1</ins>").replace(/\n/g,"<br>"); }
 function openStamp(){
+  const nb=$("#nextBtn"); nb.style.display = state.day<20 ? "block" : "none"; nb.textContent=`DAY ${state.day+1} 이어서 하기`;
   $("#stampTitle").textContent=`DAY ${state.day} 인증 완료`;
   $("#stampSub").textContent=`${state.member.nickname}님, 오늘도 멈추지 않았어요.`;
 }
