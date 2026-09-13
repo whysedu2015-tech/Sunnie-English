@@ -87,6 +87,23 @@ audio{width:100%;max-width:420px;height:34px;display:block;margin-bottom:6px}
 .copy{margin-top:14px;padding:10px 14px;border-radius:10px;background:var(--green);color:#fff;font-weight:700;font-size:14px}
 .note{font-size:13px;color:var(--ink-2);margin-top:10px}
 .loading{color:var(--ink-2);font-size:14px;padding:22px 0}
+
+/* 이번 주 정리 */
+.weeknav{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.weeknav button{font-size:13px;color:var(--ink-2);padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--white)}
+.weeknav b{font-size:16px;font-weight:800}
+.statline{display:flex;gap:10px;margin-bottom:14px}
+.statbox{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:12px 18px;min-width:120px}
+.statbox b{display:block;font-size:26px;font-weight:800;color:var(--green);line-height:1.2}
+.statbox span{font-size:12px;color:var(--ink-2)}
+.tagrow{display:flex;align-items:center;gap:10px;padding:6px 0}
+.tagrow .nm{width:110px;font-size:13px;font-weight:600;flex:none}
+.tagrow .bar{height:12px;border-radius:6px;background:var(--green);min-width:4px}
+.tagrow .ct{font-size:12px;color:var(--ink-2)}
+#tagBox{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
+#aiBox{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-top:14px;font-size:14px;line-height:1.7;display:none}
+#aiBox h4{font-size:15px;font-weight:800;color:var(--green);margin:16px 0 6px}
+#aiBox h4:first-child{margin-top:0}
 </style>
 </head>
 <body>
@@ -111,6 +128,7 @@ audio{width:100%;max-width:420px;height:34px;display:block;margin-bottom:6px}
     <button class="on" onclick="tab(0)">진행 현황</button>
     <button onclick="tab(1)">회원 상세</button>
     <button onclick="tab(2)">오늘 챙길 사람</button>
+    <button onclick="tab(3)">이번 주 정리</button>
   </div>
 
   <!-- 1. 진행 현황 -->
@@ -134,6 +152,20 @@ audio{width:100%;max-width:420px;height:34px;display:block;margin-bottom:6px}
   <!-- 3. 오늘 챙길 사람 -->
   <div class="panel" id="p2">
     <div class="behind" id="behind"></div>
+  </div>
+
+  <!-- 4. 이번 주 정리 -->
+  <div class="panel" id="p3">
+    <div class="weeknav">
+      <button onclick="shiftWeek(-1)">◀ 지난주</button>
+      <b id="weekLabel"></b>
+      <button onclick="shiftWeek(1)">다음주 ▶</button>
+    </div>
+    <div id="weekStat" class="loading">불러오는 중…</div>
+    <div id="tagBox"></div>
+    <button class="copy" id="aiBtn" onclick="makeSummary()">수업 준비 정리 만들기</button>
+    <div class="note">피드백을 모아 읽고 정리합니다. 10초쯤 걸립니다.</div>
+    <div id="aiBox"></div>
   </div>
 </div>
 
@@ -311,10 +343,57 @@ function copyBehind(){
   navigator.clipboard.writeText(txt).then(()=>alert("복사했어요.\n\n"+txt), ()=>prompt("아래를 복사해 주세요", txt));
 }
 
+// ───────── 4. 이번 주 정리 ─────────
+let WEEK_OFF = 0;
+function weekRange(){
+  const t = new Date(); t.setHours(0,0,0,0);
+  const dow = (t.getDay()+6)%7;              // 월=0
+  const mon = new Date(t); mon.setDate(t.getDate()-dow+WEEK_OFF*7);
+  const fri = new Date(mon); fri.setDate(mon.getDate()+4); fri.setHours(23,59,59,999);
+  return { from:mon, to:fri };
+}
+function shiftWeek(n){ WEEK_OFF += n; loadWeek(); }
+async function loadWeek(){
+  const { from, to } = weekRange();
+  $("#weekLabel").textContent =
+    `${from.getMonth()+1}/${from.getDate()} ~ ${to.getMonth()+1}/${to.getDate()}` +
+    (WEEK_OFF===0 ? " (이번 주)" : "");
+  $("#aiBox").style.display="none"; $("#aiBox").innerHTML="";
+  $("#weekStat").className="loading"; $("#weekStat").textContent="불러오는 중…";
+  $("#tagBox").innerHTML="";
+  try{
+    const j = await call("weekly", { from:from.toISOString(), to:to.toISOString() });
+    $("#weekStat").className="";
+    $("#weekStat").innerHTML =
+      `<div class="statline"><div class="statbox"><b>${j.count}</b><span>제출</span></div>` +
+      `<div class="statbox"><b>${j.people}</b><span>참여 회원</span></div></div>`;
+    if(!j.tags.length){ $("#tagBox").innerHTML = `<div class="note">아직 모인 피드백이 없습니다.</div>`; return; }
+    const max = j.tags[0].n;
+    $("#tagBox").innerHTML = `<div class="lab" style="margin:0 0 8px">자주 나온 지적</div>` +
+      j.tags.map(t=>`<div class="tagrow"><span class="nm">${esc(t.tag)}</span>` +
+        `<span class="bar" style="width:${Math.round(t.n/max*260)}px"></span>` +
+        `<span class="ct">${t.n}회 · ${t.people}명</span></div>`).join("");
+  }catch(e){ $("#weekStat").textContent = "불러오지 못했어요. "+String(e.message||e); }
+}
+async function makeSummary(){
+  const b = $("#aiBtn"); b.disabled=true; b.textContent="읽는 중… 10초쯤";
+  const { from, to } = weekRange();
+  try{
+    const j = await call("weekly_ai", { from:from.toISOString(), to:to.toISOString() });
+    const box = $("#aiBox"); box.style.display="block";
+    box.innerHTML = esc(j.text)
+      .replace(/^##\s*(.+)$/gm, "<h4>$1</h4>")
+      .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+      .replace(/\n/g, "<br>");
+  }catch(e){ alert("정리를 만들지 못했어요.\n\n"+String(e.message||e)); }
+  b.disabled=false; b.textContent="수업 준비 정리 만들기";
+}
+
 // ───────── 보조 ─────────
 function tab(i){
   document.querySelectorAll(".tabs button").forEach((b,n)=>b.classList.toggle("on", n===i));
   document.querySelectorAll(".panel").forEach((p,n)=>p.classList.toggle("on", n===i));
+  if(i===3 && !$("#weekLabel").textContent) loadWeek();
   window.scrollTo(0,0);
 }
 function esc(t){ return String(t==null?"":t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
