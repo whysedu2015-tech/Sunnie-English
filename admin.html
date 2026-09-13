@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SUDA 운영자</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --paper:#F6F8F4; --ink:#17302C; --ink-2:#5A6B67; --line:#D9E1DC; --white:#fff;
+  --green:#1F7A63; --green-soft:#DDEFE7; --sun:#F2C14E; --sun-soft:#FBEFC9;
+  --rose:#E36F6A; --rose-soft:#FBE2E1; --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input{font:inherit;color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:22px 18px 60px}
+
+/* 로그인 */
+.gate{max-width:360px;margin:14vh auto;text-align:center}
+.gate h1{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.gate p{color:var(--ink-2);font-size:14px;margin:6px 0 22px}
+.gate input{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--white)}
+.gate button{width:100%;margin-top:10px;padding:13px;border-radius:12px;background:var(--green);color:#fff;font-weight:700}
+.err{color:var(--rose);font-size:13px;margin-top:10px;min-height:18px}
+
+/* 헤더 */
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px}
+.head h1{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.head .meta{font-size:13px;color:var(--ink-2)}
+.head button{font-size:13px;color:var(--ink-2);text-decoration:underline}
+.tabs{display:flex;gap:6px;margin:18px 0 16px;border-bottom:1px solid var(--line)}
+.tabs button{padding:9px 14px;font-weight:600;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--green)}
+.panel{display:none}
+.panel.on{display:block}
+
+/* 격자 */
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);margin-bottom:10px;align-items:center}
+.key{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+.k-done{background:var(--green)} .k-pend{background:var(--sun)} .k-err{background:var(--rose)} .k-none{background:var(--line)}
+.gridbox{overflow-x:auto;background:var(--white);border-radius:var(--radius);border:1px solid var(--line)}
+table.grid{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+table.grid th,table.grid td{padding:6px 4px;text-align:center;white-space:nowrap}
+table.grid thead th{color:var(--ink-2);font-weight:600;font-size:12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--white)}
+th.who,td.who{position:sticky;left:0;background:var(--white);text-align:left;padding-left:14px;padding-right:12px;min-width:150px;z-index:1;border-right:1px solid var(--line)}
+td.who b{font-weight:700}
+td.who span{color:var(--ink-2);font-size:12px;margin-left:6px}
+td.who .late{color:var(--rose);font-weight:700;font-size:12px;margin-left:6px}
+tbody tr:hover td{background:#FAFCF9}
+tbody tr:hover td.who{background:#FAFCF9}
+.cell{width:22px;height:22px;border-radius:5px;background:var(--line);display:inline-block}
+.cell.done{background:var(--green)} .cell.pending{background:var(--sun)} .cell.error{background:var(--rose)}
+.cell.re{box-shadow:0 0 0 2px var(--white),0 0 0 3px var(--ink-2)}
+td.click{cursor:pointer}
+
+/* 회원 상세 */
+.picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.picker button{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--white);font-size:13px;font-weight:600}
+.picker button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.sub{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.sub h3{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
+.pill{font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--green-soft);color:var(--green)}
+.pill.pending{background:var(--sun-soft);color:#8A6A10}
+.pill.error{background:var(--rose-soft);color:#B23A34}
+.when{font-size:12px;color:var(--ink-2);margin:4px 0 12px}
+.lab{font-size:12px;color:var(--ink-2);margin:12px 0 5px}
+audio{width:100%;max-width:420px;height:34px;display:block;margin-bottom:6px}
+.script{font-size:14px;background:var(--paper);border-radius:10px;padding:10px 12px}
+.fcard{border-top:1px dashed var(--line);padding-top:10px;margin-top:10px}
+.fcard b{display:block;font-weight:700;margin-bottom:3px}
+.fcard div{font-size:14px}
+.fcard s{color:var(--rose)} .fcard ins{text-decoration:none;font-weight:700;color:var(--green)}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.tag{font-size:12px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--ink-2)}
+.retry{margin-top:12px;padding:9px 14px;border-radius:10px;background:var(--ink);color:#fff;font-weight:700;font-size:14px}
+.errbox{font-size:13px;color:#B23A34;background:var(--rose-soft);border-radius:10px;padding:9px 11px;margin-top:8px;word-break:break-all}
+
+/* 챙길 사람 */
+.behind{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.behind ul{list-style:none;margin:10px 0 0}
+.behind li{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.behind li:first-child{border-top:0}
+.behind li span{color:var(--ink-2);font-size:13px}
+.copy{margin-top:14px;padding:10px 14px;border-radius:10px;background:var(--green);color:#fff;font-weight:700;font-size:14px}
+.note{font-size:13px;color:var(--ink-2);margin-top:10px}
+.loading{color:var(--ink-2);font-size:14px;padding:22px 0}
+</style>
+</head>
+<body>
+
+<!-- 로그인 -->
+<div class="gate" id="gate">
+  <h1>SUDA 운영자</h1>
+  <p>운영자 비밀번호를 넣어 주세요.</p>
+  <input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password">
+  <button onclick="login()">들어가기</button>
+  <div class="err" id="gateErr"></div>
+</div>
+
+<!-- 본문 -->
+<div class="wrap" id="app" style="display:none">
+  <div class="head">
+    <h1>SUDA 파일럿 1기</h1>
+    <div class="meta"><span id="todayInfo"></span> · <button onclick="logout()">나가기</button></div>
+  </div>
+
+  <div class="tabs">
+    <button class="on" onclick="tab(0)">진행 현황</button>
+    <button onclick="tab(1)">회원 상세</button>
+    <button onclick="tab(2)">오늘 챙길 사람</button>
+  </div>
+
+  <!-- 1. 진행 현황 -->
+  <div class="panel on" id="p0">
+    <div class="legend">
+      <span><i class="key k-done"></i>피드백 완료</span>
+      <span><i class="key k-pend"></i>처리 중</span>
+      <span><i class="key k-err"></i>실패</span>
+      <span><i class="key k-none"></i>아직</span>
+      <span>칸을 누르면 그 회원 상세로 갑니다</span>
+    </div>
+    <div class="gridbox"><div id="gridArea" class="loading" style="padding:20px">불러오는 중…</div></div>
+  </div>
+
+  <!-- 2. 회원 상세 -->
+  <div class="panel" id="p1">
+    <div class="picker" id="picker"></div>
+    <div id="detail" class="loading">회원을 골라 주세요.</div>
+  </div>
+
+  <!-- 3. 오늘 챙길 사람 -->
+  <div class="panel" id="p2">
+    <div class="behind" id="behind"></div>
+  </div>
+</div>
+
+<script>
+// ───────── 설정 ─────────
+const SB_URL = "https://puldrhsmkmpoogfmsgwz.supabase.co";
+const SB_KEY = "sb_publishable_NQG8zAaw-1tFAX__2GXicA_hTgcCyg9";
+const API = SB_URL + "/functions/v1/admin-api";
+const START = "2026-09-14";   // DAY 1 기준 날짜 (주말 제외하고 셈)
+
+let PW = sessionStorage.getItem("suda_admin_pw") || "";
+let MEMBERS = [], SUBS = [], CUR = null;
+
+const $ = s => document.querySelector(s);
+
+async function call(action, extra){
+  const r = await fetch(API, {
+    method:"POST",
+    headers:{ "apikey":SB_KEY, "Authorization":"Bearer "+SB_KEY, "Content-Type":"application/json" },
+    body: JSON.stringify(Object.assign({ pw:PW, action }, extra||{}))
+  });
+  const j = await r.json().catch(()=>({error:"응답을 읽지 못했어요."}));
+  if(!r.ok) throw new Error(j.error || ("오류 "+r.status));
+  return j;
+}
+
+// ───────── 로그인 ─────────
+async function login(){
+  PW = $("#pw").value.trim();
+  if(!PW){ $("#gateErr").textContent="비밀번호를 넣어 주세요."; return; }
+  $("#gateErr").textContent="확인 중…";
+  try{
+    await boot();
+    sessionStorage.setItem("suda_admin_pw", PW);
+    $("#gate").style.display="none"; $("#app").style.display="block";
+  }catch(e){ $("#gateErr").textContent = String(e.message||e); }
+}
+function logout(){ sessionStorage.removeItem("suda_admin_pw"); location.reload(); }
+$("#pw").addEventListener("keydown", e=>{ if(e.key==="Enter") login(); });
+
+// ───────── 날짜 → 기대 DAY ─────────
+function expectedDay(){
+  const s = new Date(START+"T00:00:00"), t = new Date(); t.setHours(0,0,0,0);
+  if(t < s) return 0;
+  let d=0; for(let x=new Date(s); x<=t; x.setDate(x.getDate()+1)){ const w=x.getDay(); if(w!==0&&w!==6) d++; }
+  return Math.min(d,20);
+}
+
+// ───────── 데이터 ─────────
+async function boot(){
+  const j = await call("overview");
+  MEMBERS = j.members; SUBS = j.submissions;
+  const ex = expectedDay();
+  $("#todayInfo").textContent = `회원 ${MEMBERS.length}명 · 오늘 기준 DAY ${ex||"—"}`;
+  renderGrid(); renderPicker(); renderBehind();
+}
+
+// 회원×DAY 최신 상태
+function statusMap(){
+  const m = {};
+  SUBS.forEach(s=>{
+    const k = s.member_id+"|"+s.day, prev = m[k];
+    if(!prev || new Date(s.submitted_at) >= new Date(prev.submitted_at)) m[k] = s;
+  });
+  return m;
+}
+function doneDays(memberId){
+  return [...new Set(SUBS.filter(s=>s.member_id===memberId).map(s=>s.day))];
+}
+function lastDay(memberId){
+  const d = doneDays(memberId); return d.length ? Math.max(...d) : 0;
+}
+
+// ───────── 1. 진행 격자 ─────────
+function renderGrid(){
+  const map = statusMap(), ex = expectedDay();
+  let h = '<table class="grid"><thead><tr><th class="who">회원</th>';
+  for(let d=1; d<=20; d++) h += `<th>${d}</th>`;
+  h += '</tr></thead><tbody>';
+  MEMBERS.forEach(mb=>{
+    const behind = ex - lastDay(mb.id);
+    h += `<tr><td class="who"><b>${esc(mb.nickname)}</b><span>${esc(mb.name||"")}</span>` +
+         (behind>0 ? `<span class="late">−${behind}</span>` : "") + `</td>`;
+    for(let d=1; d<=20; d++){
+      const s = map[mb.id+"|"+d];
+      const cls = s ? (s.feedback_status||"pending") : "";
+      const re = s && s.attempt>1 ? " re" : "";
+      h += `<td class="click" onclick="openMember('${mb.id}')"><i class="cell ${cls}${re}"></i></td>`;
+    }
+    h += '</tr>';
+  });
+  h += '</tbody></table>';
+  $("#gridArea").outerHTML = '<div id="gridArea">'+h+'</div>';
+}
+
+// ───────── 2. 회원 상세 ─────────
+function renderPicker(){
+  $("#picker").innerHTML = MEMBERS.map(m=>
+    `<button id="pk_${m.id}" onclick="openMember('${m.id}')">${esc(m.nickname)}</button>`).join("");
+}
+function openMember(id){
+  tab(1);
+  CUR = id;
+  MEMBERS.forEach(m=>{ const b=document.getElementById("pk_"+m.id); if(b) b.classList.toggle("on", m.id===id); });
+  loadMember(id);
+}
+async function loadMember(id){
+  $("#detail").className="loading"; $("#detail").textContent="불러오는 중…";
+  try{
+    const j = await call("member", { member_id:id });
+    renderDetail(j.submissions);
+  }catch(e){ $("#detail").textContent = "불러오지 못했어요. "+String(e.message||e); }
+}
+function renderDetail(rows){
+  const el = $("#detail"); el.className="";
+  if(!rows.length){ el.className="loading"; el.textContent="아직 제출한 기록이 없어요."; return; }
+  el.innerHTML = rows.slice().reverse().map(s=>{
+    const st = s.feedback_status || "pending";
+    const stLabel = {done:"완료", pending:"처리 중", error:"실패"}[st] || st;
+    let h = `<div class="sub"><h3>DAY ${s.day} <span class="pill ${st}">${stLabel}</span>` +
+            `<span class="pill" style="background:var(--paper);color:var(--ink-2)">${esc(s.type)}</span>` +
+            (s.attempt>1 ? `<span class="pill" style="background:var(--paper);color:var(--ink-2)">${s.attempt}번째</span>` : "") + `</h3>`;
+    h += `<div class="when">제출 ${fmt(s.submitted_at)}${s.feedback_at ? " · 피드백 "+fmt(s.feedback_at) : ""}</div>`;
+
+    if(s.reading_url){ h += `<div class="lab">낭독 녹음</div><audio controls src="${s.reading_url}"></audio>`; }
+    (s.my_audio||[]).forEach((m,i)=>{ if(m.url) h += `<div class="lab">MY SENTENCE${(s.my_audio.length>1?" "+(i+1):"")}${m.sec?" · "+m.sec+"초":""}</div><audio controls src="${m.url}"></audio>`; });
+
+    const t = s.transcript || {};
+    if(t.read && t.read.text){ h += `<div class="lab">낭독 받아쓰기</div><div class="script">${esc(t.read.text)}</div>`; }
+    (t.my||[]).forEach(m=>{ if(m.heard) h += `<div class="lab">MY SENTENCE 받아쓰기</div><div class="script">${esc(m.heard)}</div>`; });
+
+    if(s.feedback && s.feedback.cards){
+      h += `<div class="lab">피드백 카드</div>`;
+      s.feedback.cards.forEach(c=>{ h += `<div class="fcard"><b>${esc(c.title||"")}</b><div>${md(c.body||"")}</div></div>`; });
+    }
+    if(s.tags && s.tags.length){ h += `<div class="tags">${s.tags.map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div>`; }
+    if(s.feedback_error){ h += `<div class="errbox">${esc(s.feedback_error)}</div>`; }
+    if(st !== "done"){ h += `<button class="retry" onclick="retry('${s.id}', this)">다시 처리</button>`; }
+    return h + `</div>`;
+  }).join("");
+}
+async function retry(id, btn){
+  btn.disabled = true; btn.textContent = "보내는 중…";
+  try{
+    await call("retry", { submission_id:id });
+    btn.textContent = "처리 중… 15초 뒤 새로고침";
+    setTimeout(async()=>{ await refreshAll(); if(CUR) loadMember(CUR); }, 15000);
+  }catch(e){ btn.disabled=false; btn.textContent="다시 처리"; alert("다시 처리에 실패했어요.\n\n"+String(e.message||e)); }
+}
+async function refreshAll(){
+  try{ const j = await call("overview"); MEMBERS=j.members; SUBS=j.submissions; renderGrid(); renderBehind(); }catch(e){}
+}
+
+// ───────── 3. 오늘 챙길 사람 ─────────
+function renderBehind(){
+  const ex = expectedDay();
+  const list = MEMBERS.map(m=>({m, last:lastDay(m.id), behind: ex - lastDay(m.id)}))
+                      .filter(x=>x.behind>0)
+                      .sort((a,b)=>b.behind-a.behind);
+  let h = `<div class="lab" style="margin:0 0 2px">달력 기준 DAY ${ex || "—"} 대비 뒤처진 회원</div>`;
+  if(ex===0){ h += `<div class="note">아직 시작일(${START}) 전이라 뒤처진 회원이 없습니다.</div>`; }
+  else if(!list.length){ h += `<div class="note">모두 따라오고 있어요.</div>`; }
+  else{
+    h += `<ul>` + list.map(x=>
+      `<li><span style="color:var(--ink)"><b>${esc(x.m.nickname)}</b> ${esc(x.m.name||"")}</span>` +
+      `<span>DAY ${x.last||0}까지 · ${x.behind}일 뒤</span></li>`).join("") + `</ul>`;
+    h += `<button class="copy" onclick="copyBehind()">닉네임 복사</button>`;
+    h += `<div class="note">복사한 뒤 카톡 단체방에 붙여넣어 주세요.</div>`;
+  }
+  $("#behind").innerHTML = h;
+  window.__behind = list;
+}
+function copyBehind(){
+  const txt = (window.__behind||[]).map(x=>x.m.nickname).join(", ");
+  navigator.clipboard.writeText(txt).then(()=>alert("복사했어요.\n\n"+txt), ()=>prompt("아래를 복사해 주세요", txt));
+}
+
+// ───────── 보조 ─────────
+function tab(i){
+  document.querySelectorAll(".tabs button").forEach((b,n)=>b.classList.toggle("on", n===i));
+  document.querySelectorAll(".panel").forEach((p,n)=>p.classList.toggle("on", n===i));
+  window.scrollTo(0,0);
+}
+function esc(t){ return String(t==null?"":t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+function md(t){ return esc(t).replace(/~~(.+?)~~/g,"<s>$1</s>").replace(/\*\*(.+?)\*\*/g,"<ins>$1</ins>").replace(/\n/g,"<br>"); }
+function fmt(s){ if(!s) return ""; const d=new Date(s);
+  return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
+
+// 저장된 비밀번호로 자동 로그인
+if(PW){ boot().then(()=>{ $("#gate").style.display="none"; $("#app").style.display="block"; })
+             .catch(()=>{ sessionStorage.removeItem("suda_admin_pw"); PW=""; }); }
+</script>
+</body>
+</html>
